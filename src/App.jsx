@@ -503,8 +503,8 @@ const styles = {
     position: 'relative',
   },
   topNav: {
-    height: 'calc(60px + var(--safe-top))',
-    paddingTop: 'var(--safe-top)',
+    height: 'calc(60px + env(safe-area-inset-top))',
+    paddingTop: 'env(safe-area-inset-top)',
     paddingLeft: '20px',
     paddingRight: '20px',
     display: 'flex',
@@ -688,7 +688,7 @@ const styles = {
   },
   floatingAddBtn: {
     position: 'absolute',
-    bottom: 'calc(80px + var(--safe-bottom))',
+    bottom: 'calc(80px + env(safe-area-inset-bottom))',
     right: '24px',
     width: '56px',
     height: '56px',
@@ -701,9 +701,11 @@ const styles = {
     zIndex: 900,
   },
   bottomNav: {
-    height: 'calc(55px + var(--safe-bottom))',
+    position: 'sticky',
+    bottom: 0,
+    height: 'calc(60px + env(safe-area-inset-bottom))',
     borderTop: '1px solid var(--border-color)',
-    paddingBottom: 'var(--safe-bottom)',
+    // paddingBottom: 'env(safe-area-inset-bottom)',
     display: 'flex',
     justifyContent: 'space-around',
     alignItems: 'center',
