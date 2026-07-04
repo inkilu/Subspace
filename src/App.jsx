@@ -71,7 +71,8 @@ export default function App() {
       
       // If mock mode is active and guest/new user has 0 subscriptions, pre-populate 3 sample items
       if (data.length === 0 && useMock) {
-        const today = new Date('2026-07-01');
+        const rawToday = new Date();
+        const today = new Date(rawToday.getFullYear(), rawToday.getMonth(), rawToday.getDate());
         
         // Generate bill dates that are slightly offset
         const dateNetflix = new Date(today);
@@ -371,7 +372,7 @@ export default function App() {
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        layout
+                        layout="position"
                       >
                         <SubscriptionCard 
                           subscription={sub}

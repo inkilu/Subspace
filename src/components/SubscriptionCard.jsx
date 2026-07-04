@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
-import { motion, useAnimation } from 'framer-motion';
-import { Trash2, Calendar, AlertCircle } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { Trash2, Calendar } from 'lucide-react';
 import { getRenewalDetails } from './Dashboard';
 import { CATEGORIES } from '../services/subscriptionData';
 
 export default function SubscriptionCard({ subscription, onDelete, onClick, currencySymbol = '$' }) {
   const [isSwiped, setIsSwiped] = useState(false);
-  const controls = useAnimation();
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const currentOffset = useRef(0);
+  const isHorizontalSwipe = useRef(null);
 
   const renewalInfo = getRenewalDetails(subscription.firstBillDate, subscription.billingCycle);
   const brandColor = subscription.color || '#8b5cf6';
@@ -14,23 +20,69 @@ export default function SubscriptionCard({ subscription, onDelete, onClick, curr
   // Find category label
   const catObj = CATEGORIES.find(c => c.id === subscription.category) || { label: 'Other' };
 
-  // Handle swipe drag end
-  const handleDragEnd = (event, info) => {
-    // If dragged left far enough, snap to action mode (-80px)
-    if (info.offset.x < -40 || info.point.x - info.startPoint.x < -40) {
+  // Handle touch interactions
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    currentOffset.current = isSwiped ? -80 : 0;
+    setIsDragging(true);
+    isHorizontalSwipe.current = null; // Reset swipe direction detection
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+
+    const diffX = e.touches[0].clientX - touchStartX.current;
+    const diffY = e.touches[0].clientY - touchStartY.current;
+
+    // Detect gesture direction on first moves
+    if (isHorizontalSwipe.current === null) {
+      if (Math.abs(diffX) > Math.abs(diffY)) {
+        isHorizontalSwipe.current = true;
+      } else if (Math.abs(diffY) > 5) {
+        isHorizontalSwipe.current = false;
+      }
+    }
+
+    // If swiping vertically, let body scrolling handle it
+    if (isHorizontalSwipe.current === false) {
+      return;
+    }
+
+    // Prevent screen scroll while swiping card horizontally
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+
+    let newOffset = currentOffset.current + diffX;
+    
+    // Apply boundaries with elastic rubber-banding limits
+    if (newOffset > 0) {
+      newOffset = newOffset * 0.15; // Swiping right resistance
+    } else if (newOffset < -80) {
+      newOffset = -80 + (newOffset + 80) * 0.15; // Swiping left past action button resistance
+    }
+
+    setSwipeOffset(newOffset);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    
+    // Snap to swiped state or closed state depending on threshold
+    if (swipeOffset < -40) {
       setIsSwiped(true);
-      controls.start({ x: -80 });
+      setSwipeOffset(-80);
     } else {
       setIsSwiped(false);
-      controls.start({ x: 0 });
+      setSwipeOffset(0);
     }
   };
 
   const closeSwipe = () => {
-    if (isSwiped) {
-      setIsSwiped(false);
-      controls.start({ x: 0 });
-    }
+    setIsSwiped(false);
+    setSwipeOffset(0);
   };
 
   const handleDeleteClick = (e) => {
@@ -60,18 +112,17 @@ export default function SubscriptionCard({ subscription, onDelete, onClick, curr
       </div>
 
       {/* Foreground card */}
-      <motion.div
-        drag="x"
-        dragDirectionLock
-        dragConstraints={{ left: -80, right: 0 }}
-        dragElastic={{ left: 0.1, right: 0.1 }}
-        onDragEnd={handleDragEnd}
-        animate={controls}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
         onClick={handleCardClick}
         style={{
           ...styles.cardForeground,
-          borderLeft: `5px solid ${brandColor}`
+          borderLeft: `5px solid ${brandColor}`,
+          transform: `translateX(${swipeOffset}px)`,
+          transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
         className="glass swipe-foreground"
       >
@@ -131,7 +182,7 @@ export default function SubscriptionCard({ subscription, onDelete, onClick, curr
             </span>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

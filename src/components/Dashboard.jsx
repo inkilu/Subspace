@@ -30,15 +30,32 @@ export const getMonthlyEquivalent = (price, cycle) => {
 
 // Utility to calculate days until next renewal
 export const getRenewalDetails = (startDateStr, cycle) => {
-  const today = new Date('2026-07-01'); // Lock to current local context date
-  const start = new Date(startDateStr);
+  const rawToday = new Date();
+  // Normalize today to local midnight (00:00:00)
+  const today = new Date(rawToday.getFullYear(), rawToday.getMonth(), rawToday.getDate());
   
+  if (!startDateStr) {
+    return { daysLeft: 0, nextDate: today.toLocaleDateString() };
+  }
+
+  // Parse YYYY-MM-DD string into local midnight to prevent time zone offset shifts
+  const parts = startDateStr.split('-');
+  if (parts.length !== 3) {
+    return { daysLeft: 0, nextDate: today.toLocaleDateString() };
+  }
+  
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1; // 0-indexed
+  const day = parseInt(parts[2], 10);
+  
+  const start = new Date(year, month, day);
   if (isNaN(start.getTime())) {
-    return { daysLeft: 0, nextDate: today };
+    return { daysLeft: 0, nextDate: today.toLocaleDateString() };
   }
   
   let nextDate = new Date(start);
   
+  // Count forward until nextDate is today or in the future
   while (nextDate < today) {
     if (cycle === 'weekly') {
       nextDate.setDate(nextDate.getDate() + 7);
@@ -50,7 +67,7 @@ export const getRenewalDetails = (startDateStr, cycle) => {
   }
   
   const diffTime = nextDate - today;
-  const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const daysLeft = Math.round(diffTime / (1000 * 60 * 60 * 24));
   
   return {
     daysLeft,
@@ -333,7 +350,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: '8px',
+    marginTop: '-5px',
   },
   welcomeText: {
     fontSize: '0.75rem',

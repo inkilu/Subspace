@@ -172,11 +172,11 @@ export default function Auth({ onAuthSuccess }) {
         </form>
 
         {/* Divider */}
-        {/* <div style={styles.divider}>
+         <div style={styles.divider}>
           <span style={styles.dividerLine}></span>
-          <span style={styles.dividerText}>or</span>
+          <span style={styles.dividerText}>Made with ❤️ by Gautham</span>
           <span style={styles.dividerLine}></span>
-        </div> */}
+        </div> 
 
         {/* Guest Access Option */}
         {/* <div style={styles.guestCurrencyWrapper}>
