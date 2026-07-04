@@ -703,7 +703,7 @@ const styles = {
   bottomNav: {
     position: 'sticky',
     bottom: 0,
-    height: 'calc(60px + env(safe-area-inset-bottom))',
+    height: 'calc(70px + env(safe-area-inset-bottom))',
     borderTop: '1px solid var(--border-color)',
     // paddingBottom: 'env(safe-area-inset-bottom)',
     display: 'flex',
